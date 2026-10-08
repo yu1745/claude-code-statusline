@@ -304,7 +304,7 @@ if [[ -n "$session_id" && -f "$transcript" && -f "$cost_pricing" ]]; then
             echo "$k ${cs_cc[$f]} ${cs_cw[$f]} ${cs_ci[$f]} ${cs_co[$f]}"
         done | awk '$1=="M"{mc+=$2;mw+=$3;mi+=$4;mo+=$5} $1=="S"{s+=$2+$3+$4+$5} END{printf "%f %f %f %f %f\n", mc, mw, mi, mo, s}')
     cost_seg=$(awk -v mc="${m_cc:-0}" -v mw="${m_cw:-0}" -v mi="${m_ci:-0}" -v mo="${m_co:-0}" -v s="${s_tot:-0}" \
-        -v Y="$YELLOW" -v C="$CYAN" -v B="${ESC}[34m" -v M="$MAGENTA" -v G="$GREEN" -v D="$DIM" -v R="$RESET" '
+        -v Y="$YELLOW" -v C="$CYAN" -v B="${ESC}[97m" -v M="$MAGENTA" -v G="$GREEN" -v D="$DIM" -v R="$RESET" '
         function usd(v) { if (v <= 0) return "0"; if (v < 0.01) return sprintf("%.4f", v); if (v < 1) return sprintf("%.3f", v); return sprintf("%.2f", v) }
         BEGIN {
             m = mc + mw + mi + mo; t = m + s
