@@ -242,19 +242,19 @@ if [[ -n "$session_id" ]] && (( cur_api_ms > 0 )); then
     fi
 fi
 
-# ---- 会话花费(照抄 pi status-footer):$总 ($cache + $input + $output) [M:$主 | S:$子代理] ----
+# ---- 会话花费(照抄 pi status-footer):$总 ($缓存读 + $缓存写 + $输入 + $输出) [M:$主 | S:$子代理] ----
 # 价格表 ~/.claude/pricing.json(USD/百万token,按模型前缀最长匹配)。
 # 从 transcript 的 message.usage 计算,按 message.id 去重;主 transcript 与
 # <session_id>/subagents/agent-*.jsonl 各自增量解析(缓存字节偏移+累计值)。
 # 括号内三项只含主会话(同 pi 的 parentTotals),总额含子代理。
 cost_pricing="$HOME/.claude/pricing.json"
 if [[ -n "$session_id" && -f "$transcript" && -f "$cost_pricing" ]]; then
-    cs_state="$HOME/.claude/.statusline-cost-${session_id}"
-    declare -A cs_off cs_cc cs_ci cs_co cs_id
+    cs_state="$HOME/.claude/.statusline-cost2-${session_id}"
+    declare -A cs_off cs_cc cs_cw cs_ci cs_co cs_id
     if [[ -f "$cs_state" ]]; then
-        while IFS=$'\t' read -r f o cc ci co lid; do
+        while IFS=$'\t' read -r f o cc cw ci co lid; do
             [[ -z "$f" ]] && continue
-            cs_off[$f]=$o cs_cc[$f]=$cc cs_ci[$f]=$ci cs_co[$f]=$co cs_id[$f]=$lid
+            cs_off[$f]=$o cs_cc[$f]=$cc cs_cw[$f]=$cw cs_ci[$f]=$ci cs_co[$f]=$co cs_id[$f]=$lid
         done <"$cs_state"
     fi
     cs_files=("$transcript")
@@ -263,16 +263,16 @@ if [[ -n "$session_id" && -f "$transcript" && -f "$cost_pricing" ]]; then
     cs_dirty=0
     for f in "${cs_files[@]}"; do
         [[ -f "$f" ]] || continue
-        o=${cs_off[$f]:-0}; cc=${cs_cc[$f]:-0}; ci=${cs_ci[$f]:-0}; co=${cs_co[$f]:-0}; lid=${cs_id[$f]:--}
+        o=${cs_off[$f]:-0}; cc=${cs_cc[$f]:-0}; cw=${cs_cw[$f]:-0}; ci=${cs_ci[$f]:-0}; co=${cs_co[$f]:-0}; lid=${cs_id[$f]:--}
         sz=$(stat -c %s "$f" 2>/dev/null || echo 0)
-        (( sz < o )) && o=0 cc=0 ci=0 co=0 lid=-
-        (( sz > o )) || { cs_off[$f]=$o cs_cc[$f]=$cc cs_ci[$f]=$ci cs_co[$f]=$co cs_id[$f]=$lid; continue; }
+        (( sz < o )) && o=0 cc=0 cw=0 ci=0 co=0 lid=-
+        (( sz > o )) || { cs_off[$f]=$o cs_cc[$f]=$cc cs_cw[$f]=$cw cs_ci[$f]=$ci cs_co[$f]=$co cs_id[$f]=$lid; continue; }
         tmp="$cs_state.chunk.$$"
         tail -c +$(( o + 1 )) "$f" | head -c $(( sz - o )) >"$tmp"
         len=$(( sz - o ))
         [[ -n "$(tail -c 1 "$tmp")" ]] && len=$(( len - $(tail -n 1 "$tmp" | wc -c) ))
         if (( len > 0 )); then
-            read -r cc ci co lid < <(
+            read -r cc cw ci co lid < <(
                 head -c "$len" "$tmp" | jq -rR --slurpfile P "$cost_pricing" '
                     fromjson? | select(.type == "assistant" and .message.usage != null and .message.id != null) |
                     .message as $m | $m.usage as $u |
@@ -283,39 +283,39 @@ if [[ -n "$session_id" && -f "$transcript" && -f "$cost_pricing" ]]; then
                     (if ($p.long_threshold != null and $plen > $p.long_threshold) then $p.long else $p end) as $p |
                     (($u.cache_creation.ephemeral_5m_input_tokens // $u.cache_creation_input_tokens // 0) as $w5 |
                      ($u.cache_creation.ephemeral_1h_input_tokens // 0) as $w1 |
-                     "\($m.id) \((($u.cache_read_input_tokens // 0) * $p.cache_read + $w5 * $p.w5m + $w1 * $p.w1h) / 1e6) \((($u.input_tokens // 0) * $p["in"]) / 1e6) \((($u.output_tokens // 0) * $p.out) / 1e6)")' 2>/dev/null |
-                awk -v cc="$cc" -v ci="$ci" -v co="$co" -v last="$lid" '
-                    $1 != last { cc += $2; ci += $3; co += $4; last = $1 }
-                    END { printf "%.8f %.8f %.8f %s\n", cc, ci, co, last }'
+                     "\($m.id) \((($u.cache_read_input_tokens // 0) * $p.cache_read) / 1e6) \(($w5 * $p.w5m + $w1 * $p.w1h) / 1e6) \((($u.input_tokens // 0) * $p["in"]) / 1e6) \((($u.output_tokens // 0) * $p.out) / 1e6)")' 2>/dev/null |
+                awk -v cc="$cc" -v cw="$cw" -v ci="$ci" -v co="$co" -v last="$lid" '
+                    $1 != last { cc += $2; cw += $3; ci += $4; co += $5; last = $1 }
+                    END { printf "%.8f %.8f %.8f %.8f %s\n", cc, cw, ci, co, last }'
             )
             o=$(( o + len )); cs_dirty=1
         fi
         rm -f "$tmp"
-        cs_off[$f]=$o cs_cc[$f]=$cc cs_ci[$f]=$ci cs_co[$f]=$co cs_id[$f]=$lid
+        cs_off[$f]=$o cs_cc[$f]=$cc cs_cw[$f]=$cw cs_ci[$f]=$ci cs_co[$f]=$co cs_id[$f]=$lid
     done
     if (( cs_dirty )); then
         for f in "${!cs_off[@]}"; do
-            printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$f" "${cs_off[$f]}" "${cs_cc[$f]}" "${cs_ci[$f]}" "${cs_co[$f]}" "${cs_id[$f]}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$f" "${cs_off[$f]}" "${cs_cc[$f]}" "${cs_cw[$f]}" "${cs_ci[$f]}" "${cs_co[$f]}" "${cs_id[$f]}"
         done >"$cs_state.$$" 2>/dev/null && mv -f "$cs_state.$$" "$cs_state" 2>/dev/null
     fi
-    read -r m_cc m_ci m_co s_tot < <(
+    read -r m_cc m_cw m_ci m_co s_tot < <(
         for f in "${!cs_off[@]}"; do
             [[ "$f" == "$transcript" ]] && k=M || k=S
-            echo "$k ${cs_cc[$f]} ${cs_ci[$f]} ${cs_co[$f]}"
-        done | awk '$1=="M"{mc+=$2;mi+=$3;mo+=$4} $1=="S"{s+=$2+$3+$4} END{printf "%f %f %f %f\n", mc, mi, mo, s}')
-    cost_seg=$(awk -v mc="${m_cc:-0}" -v mi="${m_ci:-0}" -v mo="${m_co:-0}" -v s="${s_tot:-0}" \
-        -v Y="$YELLOW" -v C="$CYAN" -v B="${ESC}[34m" -v G="$GREEN" -v D="$DIM" -v R="$RESET" '
+            echo "$k ${cs_cc[$f]} ${cs_cw[$f]} ${cs_ci[$f]} ${cs_co[$f]}"
+        done | awk '$1=="M"{mc+=$2;mw+=$3;mi+=$4;mo+=$5} $1=="S"{s+=$2+$3+$4+$5} END{printf "%f %f %f %f %f\n", mc, mw, mi, mo, s}')
+    cost_seg=$(awk -v mc="${m_cc:-0}" -v mw="${m_cw:-0}" -v mi="${m_ci:-0}" -v mo="${m_co:-0}" -v s="${s_tot:-0}" \
+        -v Y="$YELLOW" -v C="$CYAN" -v B="${ESC}[34m" -v M="$MAGENTA" -v G="$GREEN" -v D="$DIM" -v R="$RESET" '
         function usd(v) { if (v <= 0) return "0"; if (v < 0.01) return sprintf("%.4f", v); if (v < 1) return sprintf("%.3f", v); return sprintf("%.2f", v) }
         BEGIN {
-            m = mc + mi + mo; t = m + s
+            m = mc + mw + mi + mo; t = m + s
             if (t <= 0) exit
             out = Y "$" usd(t) R
-            if (m > 0) out = out D " (" R C "$" usd(mc) R D " + " R B "$" usd(mi) R D " + " R G "$" usd(mo) R D ")" R
+            if (m > 0) out = out D " (" R C "$" usd(mc) R D " + " R M "$" usd(mw) R D " + " R B "$" usd(mi) R D " + " R G "$" usd(mo) R D ")" R
             if (s > 0) out = out D " [M:" R Y "$" usd(m) R D " | S:" R Y "$" usd(s) R D "]" R
             print out
         }')
     [[ -n "$cost_seg" ]] && parts+=("$cost_seg")
-    unset cs_off cs_cc cs_ci cs_co cs_id
+    unset cs_off cs_cc cs_cw cs_ci cs_co cs_id
 fi
 
 # ---- 订阅用量 (/usage):5h / 7d 剩余 bar + 节奏偏差 + 距重置时间 ----

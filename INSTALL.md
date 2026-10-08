@@ -44,7 +44,7 @@ Feed a fake payload (use a real transcript so the cost segment shows):
 ```bash
 t=$(ls -t ~/.claude/projects/*/*.jsonl | head -1)
 echo "{\"session_id\":\"install-test\",\"transcript_path\":\"$t\",\"model\":{\"display_name\":\"test\"}}" | bash ~/.claude/statusline.sh
-rm -f ~/.claude/.statusline-*-install-test*
+rm -f ~/.claude/.statusline-*install-test*
 ```
 Expected: one line containing `test`, and `$…` if the transcript has assistant usage. Also run `bash -n ~/.claude/statusline.sh` and `jq empty ~/.claude/pricing.json`. The new status line appears in Claude Code on the next render (no restart needed; a new session if it does not).
 
@@ -53,7 +53,7 @@ Expected: one line containing `test`, and `$…` if the transcript has assistant
 - Cost is an estimate from `pricing.json`, not a bill.
 - Models not in `pricing.json` count as $0: add a row (`in`, `out`, `cache_read`, `w5m`, `w1h`, USD per MTok; longest prefix wins).
 - Optional `long_threshold` + `long` block bills a whole request at the long-context rates when its prompt exceeds the threshold (used for Haiku 5.5).
-- Per-session cache files `~/.claude/.statusline-{turns,speed,cost}-<session_id>` are safe to delete.
+- Per-session cache files `~/.claude/.statusline-{turns,speed,cost2}-<session_id>` are safe to delete.
 - The script also writes `~/.claude/sessions/last_session` (session id for the author's own resume tooling). Harmless; delete the block under "记录当前会话 session_id" if unwanted.
 
 ## Uninstall
