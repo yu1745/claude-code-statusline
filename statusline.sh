@@ -310,7 +310,7 @@ if [[ -n "$session_id" && -f "$transcript" && -f "$cost_pricing" ]]; then
             m = mc + mw + mi + mo; t = m + s
             if (t <= 0) exit
             out = Y "$" usd(t) R
-            if (m > 0) out = out D " (" R C "$" usd(mc) R D " + " R M "$" usd(mw) R D " + " R B "$" usd(mi) R D " + " R G "$" usd(mo) R D ")" R
+            if (m > 0) out = out D " (" R C "r$" usd(mc) R D " + " R M "w$" usd(mw) R D " + " R B "i$" usd(mi) R D " + " R G "o$" usd(mo) R D ")" R
             if (s > 0) out = out D " [M:" R Y "$" usd(m) R D " | S:" R Y "$" usd(s) R D "]" R
             print out
         }')
