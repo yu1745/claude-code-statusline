@@ -3,7 +3,7 @@
 A single-line status bar for [Claude Code](https://claude.com/claude-code), written in bash.
 
 ```
-312k/1.0m | Opus 5.5 | ⎇ main | ~/proj | 7 turns (25 steps) | ⚡ 82.1t/s 6.1s ↑2 ↓503 | $0.831 (r$0.30 + w$0.19 + i$0.0002 + o$0.273) [M:$0.759 | S:$0.071] | 5h ███████░░░ 76% -1h38m 0.7x 2h13m | week ... | cpu 12%
+312k/1.0m | Opus 5.5 | ⎇ main | ~/proj | 7 turns (25 steps) | ⚡ 82.1t/s 6.1s ↑2 ↓503 | $0.831 (r$0.30 + i$0.19 + o$0.273) [M:$0.759 | S:$0.071] | 5h ███████░░░ 76% -1h38m 0.7x 2h13m | week ... | cpu 12%
 ```
 
 | Segment | Meaning |
@@ -12,11 +12,11 @@ A single-line status bar for [Claude Code](https://claude.com/claude-code), writ
 | model, branch, cwd | model display name, git branch, working dir |
 | `N turns (M steps)` | real user turns / assistant API calls, parsed from the transcript |
 | `⚡ tok/s` | speed of the last response |
-| `$total (r=cache read + w=cache write + i=input + o=output) [M:main \| S:subagents]` | **session cost in USD**, computed from token usage × `pricing.json`; subagents included |
+| `$total (r=cache read + i=input incl. cache write + o=output) [M:main \| S:subagents]` | **session cost in USD**, computed from token usage × `pricing.json`; subagents included |
 | `5h` / `week` | subscription quota bars with burn-rate (subscription users only) |
 | `cpu` | system CPU since the last render |
 
-Unlike pi, cache read and cache write are shown separately: Anthropic charges for cache writes (1.25x/2x input), and in long sessions they can cost as much as the output. The cost layout otherwise mirrors the `status-footer` extension of [pi-extensions](https://github.com/yu1745/pi-extensions).
+Cache writes (1.25x/2x input price) are folded into `i`: with Claude Code almost all new input is billed as cache write, so uncached input is ~0. The cost layout otherwise mirrors the `status-footer` extension of [pi-extensions](https://github.com/yu1745/pi-extensions).
 
 ## Install
 
