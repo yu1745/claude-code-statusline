@@ -242,7 +242,7 @@ if [[ -n "$session_id" ]] && (( cur_api_ms > 0 )); then
     fi
 fi
 
-# ---- 会话花费(照抄 pi status-footer):$总 (r$缓存读 + i$输入含缓存写 + o$输出) [M:$主 | S:$子代理] ----
+# ---- 会话花费(照抄 pi status-footer):$总 (缓存读 + 输入含缓存写 + 输出) [M:$主 | S:$子代理] ----
 # 价格表 ~/.claude/pricing.json(USD/百万token,按模型前缀最长匹配)。
 # 从 transcript 的 message.usage 计算,按 message.id 去重;主 transcript 与
 # <session_id>/subagents/agent-*.jsonl 各自增量解析(缓存字节偏移+累计值)。
@@ -310,7 +310,7 @@ if [[ -n "$session_id" && -f "$transcript" && -f "$cost_pricing" ]]; then
             m = mc + mw + mi + mo; t = m + s
             if (t <= 0) exit
             out = Y "$" usd(t) R
-            if (m > 0) out = out D " (" R C "r$" usd(mc) R D " + " R B "i$" usd(mw + mi) R D " + " R G "o$" usd(mo) R D ")" R
+            if (m > 0) out = out D " (" R C "$" usd(mc) R D " + " R B "$" usd(mw + mi) R D " + " R G "$" usd(mo) R D ")" R
             if (s > 0) out = out D " [M:" R Y "$" usd(m) R D " | S:" R Y "$" usd(s) R D "]" R
             print out
         }')
