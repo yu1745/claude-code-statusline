@@ -1,0 +1,1 @@
+This repo is a Claude Code status line. To install it, follow `INSTALL.md`. Files: `statusline.sh` (all logic), `pricing.json` (USD/MTok price table). Keep prices in sync with https://platform.claude.com/docs/en/about-claude/pricing.

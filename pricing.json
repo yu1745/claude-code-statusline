@@ -1,0 +1,130 @@
+{
+  "_note": "USD per million tokens (source: platform.claude.com/docs/en/about-claude/pricing, checked 2026-10-08). in/out=input/output, cache_read, w5m/w1h=cache write 5m/1h. Matched by longest model-id prefix. Optional long={...} + long_threshold: a request whose prompt (input+cache_read+cache_write) exceeds the threshold is billed entirely at the long rates.",
+  "claude-fable-5": {
+    "in": 10,
+    "out": 50,
+    "cache_read": 1,
+    "w5m": 12.5,
+    "w1h": 20
+  },
+  "claude-fable-5-1": {
+    "in": 10,
+    "out": 50,
+    "cache_read": 0.25,
+    "w5m": 12.5,
+    "w1h": 20
+  },
+  "claude-mythos-5": {
+    "in": 10,
+    "out": 50,
+    "cache_read": 1,
+    "w5m": 12.5,
+    "w1h": 20
+  },
+  "claude-mythos-5-1": {
+    "in": 10,
+    "out": 50,
+    "cache_read": 0.25,
+    "w5m": 12.5,
+    "w1h": 20
+  },
+  "claude-opus-5-5": {
+    "in": 4,
+    "out": 20,
+    "cache_read": 0.2,
+    "w5m": 5,
+    "w1h": 8
+  },
+  "claude-opus-5": {
+    "in": 5,
+    "out": 25,
+    "cache_read": 0.5,
+    "w5m": 6.25,
+    "w1h": 10
+  },
+  "claude-opus-4": {
+    "in": 15,
+    "out": 75,
+    "cache_read": 1.5,
+    "w5m": 18.75,
+    "w1h": 30
+  },
+  "claude-opus-4-5": {
+    "in": 5,
+    "out": 25,
+    "cache_read": 0.5,
+    "w5m": 6.25,
+    "w1h": 10
+  },
+  "claude-opus-4-6": {
+    "in": 5,
+    "out": 25,
+    "cache_read": 0.5,
+    "w5m": 6.25,
+    "w1h": 10
+  },
+  "claude-opus-4-7": {
+    "in": 5,
+    "out": 25,
+    "cache_read": 0.5,
+    "w5m": 6.25,
+    "w1h": 10
+  },
+  "claude-opus-4-8": {
+    "in": 5,
+    "out": 25,
+    "cache_read": 0.5,
+    "w5m": 6.25,
+    "w1h": 10
+  },
+  "claude-sonnet-5": {
+    "in": 2,
+    "out": 10,
+    "cache_read": 0.2,
+    "w5m": 2.5,
+    "w1h": 4
+  },
+  "claude-sonnet-5-5": {
+    "in": 2,
+    "out": 10,
+    "cache_read": 0.1,
+    "w5m": 2.5,
+    "w1h": 4
+  },
+  "claude-sonnet-4": {
+    "in": 3,
+    "out": 15,
+    "cache_read": 0.3,
+    "w5m": 3.75,
+    "w1h": 6
+  },
+  "claude-haiku-5": {
+    "in": 0.1,
+    "out": 0.5,
+    "cache_read": 0.01,
+    "w5m": 0.125,
+    "w1h": 0.2,
+    "long_threshold": 100000,
+    "long": {
+      "in": 0.5,
+      "out": 2.5,
+      "cache_read": 0.05,
+      "w5m": 0.625,
+      "w1h": 1
+    }
+  },
+  "claude-haiku-4": {
+    "in": 1,
+    "out": 5,
+    "cache_read": 0.1,
+    "w5m": 1.25,
+    "w1h": 2
+  },
+  "claude-3-5-haiku": {
+    "in": 0.8,
+    "out": 4,
+    "cache_read": 0.08,
+    "w5m": 1,
+    "w1h": 1.6
+  }
+}
